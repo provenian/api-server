@@ -15,10 +15,14 @@ type API =
   ReqBody '[JSON] (SnakeCase CreateReq) :> Post '[JSON] NoContent
   :<|> Get '[JSON] [SnakeCase Problem]
   :<|> "drafts" :> Get '[JSON] [SnakeCase Problem]
-  :<|> Capture "problemId" String :> ReqBody '[JSON] (SnakeCase Problem) :> Put '[JSON] NoContent
-  :<|> Capture "problemId" String :> "publish" :> Put '[JSON] NoContent
-  :<|> Capture "problemId" String :> "submit" :> Get '[JSON] [SnakeCase Submission]
-  :<|> Capture "problemId" String :> "submit" :> ReqBody '[JSON] (SnakeCase Submission) :> Post '[JSON] NoContent
+  :<|> Capture "problemId" String :>
+    ( ReqBody '[JSON] (SnakeCase Problem) :> Put '[JSON] NoContent
+    :<|> "publish" :> Put '[JSON] NoContent
+    :<|> "submit" :>
+      ( Get '[JSON] [SnakeCase Submission]
+      :<|> ReqBody '[JSON] (SnakeCase Submission) :> Post '[JSON] NoContent
+      )
+    )
 
 data CreateReq = ProblemCreateReq {
   version :: String,
@@ -63,4 +67,4 @@ api =
   submissions _ = return []
 
   submit :: String -> SnakeCase Submission -> Handler NoContent
-  submit _ = return NoContent
+  submit _ _ = return NoContent

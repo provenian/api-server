@@ -9,16 +9,14 @@ import Data.Aeson
 import Data.Aeson.Casing
 
 import qualified Web.Handler.Problems
+import qualified Web.Handler.Submissions
 
 type API =
   "problems" :> Web.Handler.Problems.API
-  :<|> "submissions" :>
-    (
-      Capture "submissionId" String :> Get '[JSON] ()
-    )
+  :<|> "submissions" :> Web.Handler.Submissions.API
 
 server :: Server API
-server = Web.Handler.Problems.api :<|> (\_ -> return ())
+server = Web.Handler.Problems.api :<|> Web.Handler.Submissions.api
 
 api :: Proxy API
 api = Proxy

@@ -13,6 +13,30 @@ data Result = Result {
 instance ToJSON Result
 instance FromJSON Result
 
+rWJ :: Result
+rWJ = Result
+  { statusCode = "WJ"
+  , statusText = "Waiting for Judge"
+  , message    = ""
+  , isFinished = False
+  }
+
+rCE :: String -> Result
+rCE m = Result
+  { statusCode = "CE"
+  , statusText = "Compilation Error"
+  , message    = m
+  , isFinished = True
+  }
+
+rV :: String -> Result
+rV m = Result
+  { statusCode = "V"
+  , statusText = "Verified"
+  , message    = m
+  , isFinished = True
+  }
+
 data Submission = Submission {
   id :: String,
   createdAt :: Int,
