@@ -1,4 +1,6 @@
 .ghc.*
 dist*/
+.vscode/
+
 
 

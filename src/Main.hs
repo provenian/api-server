@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Main where
 
 import Network.Wai
@@ -5,18 +6,19 @@ import Network.Wai.Handler.Warp
 import Servant
 import Data.Proxy
 import Data.Aeson
-import GHC.Generics
+import Data.Aeson.Casing
 
-data Problem = Problem {
-  id :: String
-} deriving (Generic)
+import qualified Web.Handler.Problems
 
-instance ToJSON Problem
-
-type API = "problems" :> Get '[JSON] [Problem]
+type API =
+  "problems" :> Web.Handler.Problems.API
+  :<|> "submissions" :>
+    (
+      Capture "submissionId" String :> Get '[JSON] ()
+    )
 
 server :: Server API
-server = return $ [Problem "12345"]
+server = Web.Handler.Problems.api :<|> (\_ -> return ())
 
 api :: Proxy API
 api = Proxy
