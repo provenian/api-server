@@ -6,12 +6,19 @@ import Servant
 
 import Domain.Problem (Problem)
 import qualified Domain.Problem
+import Domain.Submission (Submission)
+import qualified Domain.Submission
 
-import Web.Presenters (SnakeCase)
+import Web.Presenters (SnakeCase(SnakeCase))
 
 type API =
-  ReqBody '[JSON] (SnakeCase CreateReq) :> Post '[JSON] ()
-  :<|> Get '[JSON] [Problem]
+  ReqBody '[JSON] (SnakeCase CreateReq) :> Post '[JSON] NoContent
+  :<|> Get '[JSON] [SnakeCase Problem]
+  :<|> "drafts" :> Get '[JSON] [SnakeCase Problem]
+  :<|> Capture "problemId" String :> ReqBody '[JSON] (SnakeCase Problem) :> Put '[JSON] NoContent
+  :<|> Capture "problemId" String :> "publish" :> Put '[JSON] NoContent
+  :<|> Capture "problemId" String :> "submit" :> Get '[JSON] [SnakeCase Submission]
+  :<|> Capture "problemId" String :> "submit" :> ReqBody '[JSON] (SnakeCase Submission) :> Post '[JSON] NoContent
 
 data CreateReq = ProblemCreateReq {
   version :: String,
@@ -21,13 +28,15 @@ data CreateReq = ProblemCreateReq {
 instance FromJSON CreateReq
 
 api :: Server API
-api = post :<|> list
+api =
+  post :<|> list :<|> drafts :<|> edit :<|> publish :<|> submissions :<|> submit
  where
-  post :: SnakeCase CreateReq -> Handler ()
-  post _ = return ()
+  post :: SnakeCase CreateReq -> Handler NoContent
+  post _ = return NoContent
 
-  list :: Handler [Problem]
-  list = return
+  list :: Handler [SnakeCase Problem]
+  list = return $ map
+    SnakeCase
     [ Domain.Problem.Problem "1234"
                              "1.0"
                              "ほげ"
@@ -40,3 +49,18 @@ api = post :<|> list
                              ["isabelle"]
                              ["Hard"]
     ]
+
+  drafts :: Handler [SnakeCase Problem]
+  drafts = return []
+
+  edit :: String -> SnakeCase Problem -> Handler NoContent
+  edit _ _ = return NoContent
+
+  publish :: String -> Handler NoContent
+  publish _ = return NoContent
+
+  submissions :: String -> Handler [SnakeCase Submission]
+  submissions _ = return []
+
+  submit :: String -> SnakeCase Submission -> Handler NoContent
+  submit _ = return NoContent
