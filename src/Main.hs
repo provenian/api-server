@@ -1,28 +1,44 @@
-{-# LANGUAGE FlexibleInstances #-}
 module Main where
 
-import Network.Wai
-import Network.Wai.Handler.Warp
-import Servant
+import Control.Monad.Reader
+import Control.Monad.Logger (runStdoutLoggingT)
 import Data.Proxy
-import Data.Aeson
-import Data.Aeson.Casing
+import Data.Reflection
+import qualified Database.Persist.MySQL as MySQL
+import Network.Wai
+import Network.Wai.Handler.Warp (run)
+import Servant
 
+import Driver.MySQL
+import Domain.App (HandlerM, AppState(..))
+import Domain.InfraInterface.IProblemRepo
 import qualified Web.Handler.Problems
 import qualified Web.Handler.Submissions
+import qualified Infra.Repository.ProblemRepo
 
 type API =
   "problems" :> Web.Handler.Problems.API
   :<|> "submissions" :> Web.Handler.Submissions.API
 
-server :: Server API
+server :: UseProblemRepo => ServerT API HandlerM
 server = Web.Handler.Problems.api :<|> Web.Handler.Submissions.api
 
 api :: Proxy API
 api = Proxy
 
-app :: Application
-app = serve api server
-
 main :: IO ()
-main = run 1234 app
+main = give Infra.Repository.ProblemRepo.new $ do
+  pool <- createSQLPool
+    ( defaultConnectInfoMB4 { ciDatabase = "provenian"
+                            , ciUser     = "root"
+                            , ciPassword = "password"
+                            }
+    )
+    10
+  let appState = AppState {connPool = pool}
+  flip runReaderT appState $ do
+    Infra.Repository.ProblemRepo.createTable
+
+  liftIO $ run 1234 $ serve api $ hoistServer api
+                                              (flip runReaderT appState)
+                                              server

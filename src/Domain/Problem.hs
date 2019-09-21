@@ -5,7 +5,6 @@ import GHC.Generics
 
 data Problem = Problem {
   id :: String,
-  version :: String,
   title :: String,
   contentType :: String,
   content :: String,

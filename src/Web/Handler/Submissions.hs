@@ -2,6 +2,7 @@ module Web.Handler.Submissions where
 
 import Servant
 
+import Domain.App
 import Domain.Submission (Submission)
 import qualified Domain.Submission
 import Web.Presenters (SnakeCase(SnakeCase))
@@ -9,10 +10,10 @@ import Web.Presenters (SnakeCase(SnakeCase))
 type API =
   Capture "submissionId" String :> Get '[JSON] (SnakeCase Submission)
 
-api :: Server API
+api :: ServerT API HandlerM
 api = get
  where
-  get :: String -> Handler (SnakeCase Submission)
+  get :: String -> HandlerM (SnakeCase Submission)
   get _ = return $ SnakeCase $ Domain.Submission.Submission
     "1234"
     12345
