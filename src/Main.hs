@@ -4,7 +4,6 @@ import Control.Monad.Reader
 import Control.Monad.Logger (runStdoutLoggingT)
 import Data.Proxy
 import Data.Reflection
-import qualified Database.Persist.MySQL as MySQL
 import Network.Wai
 import Network.Wai.Handler.Warp (run)
 import Servant
@@ -36,6 +35,7 @@ main = give Infra.Repository.ProblemRepo.new $ do
     )
     10
   let appState = AppState {connPool = pool}
+
   flip runReaderT appState $ do
     Infra.Repository.ProblemRepo.createTable
 
