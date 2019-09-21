@@ -26,7 +26,7 @@ instance GMapper t => GMapper (C1 d t) where
   gfields x = gfields $ unM1 x
 
 instance (GMapper r1, GMapper r2) => GMapper (r1 :*: r2) where
-  gfields (r1 :*: r2) = [gfield r1] ++ gfields r2
+  gfields (r1 :*: r2) = gfields r1 ++ gfields r2
 
 instance (Selector d, GMapper t) => GMapper (S1 d t) where
   gfields r = [gfield r]

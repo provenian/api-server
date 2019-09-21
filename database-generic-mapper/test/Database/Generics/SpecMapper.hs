@@ -18,3 +18,39 @@ spec_Sample_record = do
     it "should generate createTable query" $ do
       createTable Sample{}
         `shouldBe` "CREATE TABLE IF NOT EXISTS `Sample` (`key` text PRIMARY KEY, `name` bigint NOT NULL, `single` text)"
+
+data ManyFields = ManyFields {
+  f1 :: String,
+  f2 :: String,
+  f3 :: String,
+  f4 :: String,
+  f5 :: String,
+  f6 :: String,
+  f7 :: String,
+  f8 :: String,
+  f9 :: String,
+  f10 :: String,
+  f11 :: String,
+  f12 :: String,
+  f13 :: String,
+  f14 :: String,
+  f15 :: String,
+  f16 :: String,
+  f17 :: String,
+  f18 :: String,
+  f19 :: String,
+  f20 :: String,
+  f21 :: String,
+  f22 :: String,
+  f23 :: String,
+  f24 :: String,
+  f25 :: String,
+  f26 :: String,
+  f27 :: String
+} deriving Generic
+
+spec_ManyFields_record :: Spec
+spec_ManyFields_record = do
+  describe "ManyFields" $ do
+    it "should generate createTable query" $ do
+      createTable ManyFields{} /= "" `shouldBe` True
