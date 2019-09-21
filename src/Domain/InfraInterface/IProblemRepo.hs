@@ -42,12 +42,14 @@ fromCreateInput i key = Problem key
 class IProblemRepo r where
   getByID :: (MonadIO m, MonadBaseControl IO m) => r -> String -> ReaderT AppState m (Maybe Problem)
   create :: (MonadIO m, MonadBaseControl IO m) => r -> CreateInput -> ReaderT AppState m ()
+  list :: (MonadIO m, MonadBaseControl IO m) => r -> ReaderT AppState m [Problem]
 
 data SomeProblemRepo = forall a. IProblemRepo a => SomeProblemRepo a
 
 instance IProblemRepo SomeProblemRepo where
   getByID (SomeProblemRepo r) x = getByID r x
   create (SomeProblemRepo r) x = create r x
+  list (SomeProblemRepo r) = list r
 
 type UseProblemRepo = Given SomeProblemRepo
 

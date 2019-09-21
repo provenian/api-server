@@ -115,3 +115,6 @@ instance IProblemRepo Repo where
   create _ input = runSQL $ \conn -> liftIO $ do
     (_, result) <- SQL.query conn "INSERT INTO `problem` VALUE (?,?,?,?,?,?,?,?,?,?)" (mapToRawValues $ fromModel $ fromCreateInput input "1234")
     SQL.skipToEof result
+  list _ = runSQL $ \conn -> liftIO $ do
+    (_, result) <- SQL.query_ conn "SELECT * FROM `problem`"
+    fmap (map (toModel . mapToRecord)) $ IOS.toList result

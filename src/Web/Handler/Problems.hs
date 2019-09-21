@@ -7,7 +7,8 @@ import Servant
 import Domain.App
 import Domain.Problem (Problem)
 import qualified Domain.Problem
-import Domain.InfraInterface.IProblemRepo
+import Domain.InfraInterface.IProblemRepo (useProblemRepo, UseProblemRepo)
+import qualified Domain.InfraInterface.IProblemRepo as IProblemRepo
 import Domain.Submission (Submission)
 import qualified Domain.Submission
 
@@ -47,24 +48,13 @@ api =
  where
   post :: SnakeCase CreateReq -> HandlerM NoContent
   post (SnakeCase req) = do
-    create useProblemRepo (CreateInput (title req) "" "" 0 0 "" [] [] [])
+    IProblemRepo.create
+      useProblemRepo
+      (IProblemRepo.CreateInput (title req) "" "" 0 0 "" [] [] [])
     return NoContent
 
   list :: HandlerM [SnakeCase Problem]
-  list = do
-    return $ map
-      SnakeCase
-      [ Domain.Problem.Problem "1234"
-                               "ほげ"
-                               "text/markdown"
-                               "ほげぴよ"
-                               1568561381
-                               1568561381
-                               "user"
-                               ["isabelle/ROOT"]
-                               ["isabelle"]
-                               ["Hard"]
-      ]
+  list = fmap (map SnakeCase) $ IProblemRepo.list useProblemRepo
 
   drafts :: HandlerM [SnakeCase Problem]
   drafts = return []
