@@ -1,6 +1,7 @@
 module Web.Handler.Problems where
 
 import Data.Aeson
+import qualified Data.Text as T
 import GHC.Generics
 import Servant
 
@@ -28,8 +29,7 @@ type API =
     )
 
 data CreateReq = ProblemCreateReq {
-  version :: String,
-  title :: String
+  title :: T.Text
 } deriving (Generic)
 
 instance FromJSON CreateReq

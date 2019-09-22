@@ -11,23 +11,24 @@ module Domain.InfraInterface.IProblemRepo (
 
 import Control.Monad.Trans.Control
 import Control.Monad.Reader
+import qualified Data.Text as T
 import Data.Reflection (Given, given)
 import Domain.App
 import Domain.Problem (Problem(Problem))
 
 data CreateInput = CreateInput {
-  title :: String,
-  contentType :: String,
-  content :: String,
+  title :: T.Text,
+  contentType :: T.Text,
+  content :: T.Text,
   createdAt :: Int,
   updatedAt :: Int,
-  writer :: String,
-  files :: [String],
-  languages :: [String],
-  tags :: [String]
+  writer :: T.Text,
+  files :: [T.Text],
+  languages :: [T.Text],
+  tags :: [T.Text]
 }
 
-fromCreateInput :: CreateInput -> String -> Problem
+fromCreateInput :: CreateInput -> T.Text -> Problem
 fromCreateInput i key = Problem key
                                 (title i)
                                 (contentType i)
@@ -40,7 +41,7 @@ fromCreateInput i key = Problem key
                                 (tags i)
 
 class IProblemRepo r where
-  getByID :: (MonadIO m, MonadBaseControl IO m) => r -> String -> ReaderT AppState m (Maybe Problem)
+  getByID :: (MonadIO m, MonadBaseControl IO m) => r -> T.Text -> ReaderT AppState m (Maybe Problem)
   create :: (MonadIO m, MonadBaseControl IO m) => r -> CreateInput -> ReaderT AppState m ()
   list :: (MonadIO m, MonadBaseControl IO m) => r -> ReaderT AppState m [Problem]
 

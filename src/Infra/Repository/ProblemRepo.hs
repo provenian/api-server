@@ -1,7 +1,9 @@
 module Infra.Repository.ProblemRepo where
 
+import Prelude hiding (id)
 import Control.Monad.Reader
 import qualified Database.MySQL.Base as SQL
+import Database.Generics.Mapper as Mapper
 import Data.String (IsString(fromString))
 import qualified Data.Text as T
 import GHC.Generics
@@ -14,92 +16,46 @@ import qualified Domain.Problem as Problem
 import Domain.InfraInterface.IProblemRepo
 
 data ProblemRecord = ProblemRecord {
-  _id :: String,
-  title :: String,
-  contentType :: String,
-  content :: String,
-  createdAt :: Int,
-  updatedAt :: Int,
-  writer :: String,
-  files :: [String],
-  languages :: [String],
-  tags :: [String]
+  id :: VarChar 26 :- '["PRIMARY KEY"],
+  title :: VarChar 1024,
+  contentType :: VarChar 128,
+  content :: VarChar 1024,
+  createdAt :: BigInt :- '["NOT NULL"],
+  updatedAt :: BigInt :- '["NOT NULL"],
+  writer :: VarChar 128,
+  files :: Text,
+  languages :: Text,
+  tags :: Text
 } deriving (Generic)
 
 createTable :: ReaderT AppState IO ()
-createTable = void $ runSQL $ \conn -> SQL.execute_ conn $ fromString $ concat
-  [ "CREATE TABLE IF NOT EXISTS `problem` ("
-  , "id VARCHAR(26) PRIMARY KEY, "
-  , "title VARCHAR(1024), "
-  , "contentType VARCHAR(128), "
-  , "content VARCHAR(1024), "
-  , "createdAt bigint NOT NULL, "
-  , "updatedAt bigint NOT NULL, "
-  , "writer VARCHAR(128), "
-  , "files text DEFAULT NULL, "
-  , "languages text DEFAULT NULL, "
-  , "tags text DEFAULT NULL"
-  , ")"
-  ]
-
-mapToRecord :: [SQL.MySQLValue] -> ProblemRecord
-mapToRecord [vId, vTitle, vContentType, vContent, vCreatedAt, vUpdatedAt, vWriter, vFiles, vLangs, vTags]
-  = ProblemRecord (unwrapString vId)
-                  (unwrapString vTitle)
-                  (unwrapString vContentType)
-                  (unwrapString vContent)
-                  (unwrapInt vCreatedAt)
-                  (unwrapInt vUpdatedAt)
-                  ""
-                  []
-                  []
-                  []
- where
-  unwrapString (SQL.MySQLText t) = T.unpack t
-  unwrapInt (SQL.MySQLInt64 i) = fromIntegral $ toInteger i
-
-mapToRawValues :: ProblemRecord -> [SQL.MySQLValue]
-mapToRawValues r =
-  [ wrapString (_id r)
-  , wrapString (title r)
-  , wrapString (contentType r)
-  , wrapString (content r)
-  , wrapInt (createdAt r)
-  , wrapInt (updatedAt r)
-  , wrapString (writer r)
-  , wrapString $ concat (files r)
-  , wrapString $ concat (languages r)
-  , wrapString $ concat (tags r)
-  ]
- where
-  wrapString = SQL.MySQLText . T.pack
-
-  wrapInt :: Int -> SQL.MySQLValue
-  wrapInt = SQL.MySQLInt64 . fromIntegral
+createTable = void $ runSQL $ \conn ->
+  SQL.execute_ conn $ fromString $ Mapper.createTable ProblemRecord{}
 
 toModel :: ProblemRecord -> Problem
-toModel r = Problem (_id r)
-                    (title r)
-                    (contentType r)
-                    (content r)
-                    (createdAt r)
-                    (updatedAt r)
-                    (writer r)
-                    (files r)
-                    (languages r)
-                    (tags r)
+toModel r = Problem (getVarChar $ getField $ id r)
+                    (getVarChar $ title r)
+                    (getVarChar $ contentType r)
+                    (getVarChar $ content r)
+                    (fromIntegral $ getBigInt $ getField $ createdAt r)
+                    (fromIntegral $ getBigInt $ getField $ updatedAt r)
+                    (getVarChar $ writer r)
+                    (read $ T.unpack $ getText $ files r)
+                    (read $ T.unpack $ getText $ languages r)
+                    (read $ T.unpack $ getText $ tags r)
 
 fromModel :: Problem -> ProblemRecord
-fromModel r = ProblemRecord (Problem.id r)
-                            (Problem.title r)
-                            (Problem.contentType r)
-                            (Problem.content r)
-                            (Problem.createdAt r)
-                            (Problem.updatedAt r)
-                            (Problem.writer r)
-                            (Problem.files r)
-                            (Problem.languages r)
-                            (Problem.tags r)
+fromModel r = ProblemRecord
+  (Field $ VarChar $ Problem.id r)
+  (VarChar $ Problem.title r)
+  (VarChar $ Problem.contentType r)
+  (VarChar $ Problem.content r)
+  (Field $ BigInt $ fromIntegral $ Problem.createdAt r)
+  (Field $ BigInt $ fromIntegral $ Problem.updatedAt r)
+  (VarChar $ Problem.writer r)
+  (Text $ T.pack $ show $ Problem.files r)
+  (Text $ T.pack $ show $ Problem.languages r)
+  (Text $ T.pack $ show $ Problem.tags r)
 
 
 data Repo = Repo
@@ -109,12 +65,12 @@ new = SomeProblemRepo Repo
 
 instance IProblemRepo Repo where
   getByID _ key = runSQL $ \conn -> liftIO $ do
-    (columns, result) <- SQL.query conn "SELECT * FROM `problem` WHERE id = ?" [SQL.MySQLText $ T.pack key]
+    (columns, result) <- SQL.query conn "SELECT * FROM `problem` WHERE id = ?" [SQL.MySQLText key]
     mv <- IOS.read result
-    return $ fmap (toModel . mapToRecord) $ mv
+    return $ fmap (toModel . deserialize) $ mv
   create _ input = runSQL $ \conn -> liftIO $ do
-    (_, result) <- SQL.query conn "INSERT INTO `problem` VALUE (?,?,?,?,?,?,?,?,?,?)" (mapToRawValues $ fromModel $ fromCreateInput input "1234")
+    (_, result) <- SQL.query conn "INSERT INTO `problem` VALUE (?,?,?,?,?,?,?,?,?,?)" (serialize $ fromModel $ fromCreateInput input "1234")
     SQL.skipToEof result
   list _ = runSQL $ \conn -> liftIO $ do
     (_, result) <- SQL.query_ conn "SELECT * FROM `problem`"
-    fmap (map (toModel . mapToRecord)) $ IOS.toList result
+    fmap (map (toModel . deserialize)) $ IOS.toList result
