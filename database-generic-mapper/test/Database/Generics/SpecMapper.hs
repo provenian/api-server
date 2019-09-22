@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Database.Generics.SpecMapper where
 
 import Database.Generics.Mapper
@@ -11,7 +12,7 @@ data Sample = Sample {
   key :: VarChar 20 :- '["PRIMARY KEY"],
   name :: BigInt :- '["NOT NULL"],
   single :: String
-} deriving Generic
+} deriving (Eq, Show, Generic)
 
 spec_Sample_record :: Spec
 spec_Sample_record = do
@@ -19,6 +20,13 @@ spec_Sample_record = do
     it "should generate createTable query" $ do
       createTable Sample{}
         `shouldBe` "CREATE TABLE IF NOT EXISTS `Sample` (`key` varchar(20) PRIMARY KEY, `name` bigint NOT NULL, `single` text)"
+    it "should mapToSQLValues" $ do
+      mapToSQLValues (Sample (Field $ VarChar "foo") (Field $ BigInt 100) "bar")
+        `shouldBe` [SQLVarChar "foo", SQLBigInt 100, SQLText "bar"]
+    it "should mapFromSQLValues" $ do
+      mapFromSQLValues [SQLVarChar "foo", SQLBigInt 100, SQLText "bar"]
+        `asTypeOf` Sample{}
+        `shouldBe` (Sample (Field $ VarChar "foo") (Field $ BigInt 100) "bar")
 
 data ManyFields = ManyFields {
   f1 :: String,
