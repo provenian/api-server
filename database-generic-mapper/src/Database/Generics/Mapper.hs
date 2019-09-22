@@ -4,7 +4,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Database.Generics.Mapper where
+module Database.Generics.Mapper (
+  GMapper(..),
+  Mapper(..),
+  createTable,
+  (:-)(..),
+
+  module Database.Generics.Mapper.MySQL,
+) where
 
 import Data.Proxy
 import Data.List
