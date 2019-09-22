@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Database.Generics.Mapper where
 
 import Data.Proxy
@@ -10,6 +11,7 @@ import Data.List
 import Generics.Deriving
 import GHC.Generics
 import GHC.TypeLits
+import Database.Generics.Mapper.MySQL
 
 data (:-) a (attrs :: [Symbol]) = Field { getField :: a }
 
@@ -46,15 +48,6 @@ instance Mapper '[] where
 
 instance (Mapper xs, KnownSymbol x) => Mapper (x : xs) where
   attrs (Proxy :: Proxy (x:xs)) = symbolVal (Proxy :: Proxy x) : attrs (Proxy :: Proxy xs)
-
-class SQLField a where
-  fieldType :: a -> String
-
-instance SQLField String where
-  fieldType _ = "text"
-
-instance SQLField Int where
-  fieldType _ = "bigint"
 
 createTable :: (Generic a, GMapper (Rep a)) => a -> String
 createTable a =
