@@ -3,12 +3,13 @@
 module Database.Generics.SpecMapper where
 
 import Database.Generics.Mapper
+import Database.Generics.Mapper.MySQL
 import Test.Tasty.Hspec
 import GHC.Generics
 
 data Sample = Sample {
-  key :: String :- '["PRIMARY KEY"],
-  name :: Int :- '["NOT NULL"],
+  key :: VarChar 20 :- '["PRIMARY KEY"],
+  name :: BigInt :- '["NOT NULL"],
   single :: String
 } deriving Generic
 
@@ -17,7 +18,7 @@ spec_Sample_record = do
   describe "Sample" $ do
     it "should generate createTable query" $ do
       createTable Sample{}
-        `shouldBe` "CREATE TABLE IF NOT EXISTS `Sample` (`key` text PRIMARY KEY, `name` bigint NOT NULL, `single` text)"
+        `shouldBe` "CREATE TABLE IF NOT EXISTS `Sample` (`key` varchar(20) PRIMARY KEY, `name` bigint NOT NULL, `single` text)"
 
 data ManyFields = ManyFields {
   f1 :: String,
