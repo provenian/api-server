@@ -23,7 +23,7 @@ instance SQLField Int64 where
 instance SQLField Int32 where
   fieldType _ = "bigint"
 
-newtype VarChar (length :: Nat) = VarChar { getText :: T.Text }
+newtype VarChar (length :: Nat) = VarChar { getVarChar :: T.Text }
 
 instance KnownNat n => SQLField (VarChar n) where
   fieldType (_ :: VarChar n) = "varchar(" ++ show (natVal (Proxy :: Proxy n)) ++ ")"
@@ -32,3 +32,8 @@ newtype BigInt = BigInt { getBigInt :: Int64 }
 
 instance SQLField BigInt where
   fieldType _ = "bigint"
+
+newtype Text = Text { getText :: T.Text }
+
+instance SQLField Text where
+  fieldType _ = "text"
