@@ -26,7 +26,7 @@ data ProblemRecord = ProblemRecord {
   files :: Text,
   languages :: Text,
   tags :: Text
-} deriving (Generic)
+} deriving (Generic, Show)
 
 createTable :: ReaderT AppState IO ()
 createTable = void $ runSQL $ \conn ->
@@ -64,12 +64,11 @@ new = SomeProblemRepo Repo
 
 instance IProblemRepo Repo where
   getByID _ key = runSQL $ \conn -> liftIO $ do
-    result <- SQL.query conn "SELECT * FROM `problem` WHERE id = ?" [key]
+    result <- SQL.query conn "SELECT * FROM `ProblemRecord` WHERE id = ?" [key]
     return $ (\xs -> if length xs == 1 then Just (head xs) else Nothing) $ map (toModel . mapFromSQLValues . map (\(Just x) -> x)) result
   create _ input = runSQL $ \conn -> liftIO $ do
-    [SQL.Only n] <- SQL.query conn "INSERT INTO `problem` VALUE (?)" (SQL.Only $ SQL.VaArgs $ mapToSQLValues $ fromModel $ fromCreateInput input "1234")
-    let _ = n :: Int
+    _ <- SQL.execute conn "INSERT INTO `ProblemRecord` VALUE (?)" (SQL.Only $ SQL.VaArgs $ mapToSQLValues $ fromModel $ fromCreateInput input "1234")
     return ()
   list _ = runSQL $ \conn -> liftIO $ do
-    result <- SQL.query_ conn "SELECT * FROM `problem`"
+    result <- SQL.query_ conn "SELECT * FROM `ProblemRecord`"
     return $ map (toModel . mapFromSQLValues . map (\(Just x) -> x)) result

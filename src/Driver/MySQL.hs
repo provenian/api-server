@@ -7,6 +7,7 @@ module Driver.MySQL (
 
   SQL.ConnectInfo(..),
   SQL.defaultConnectInfo,
+  MySQL.Option(..),
 ) where
 
 import Control.Monad.Reader
@@ -42,15 +43,16 @@ createSQLPool conn m =
 instance {-# OVERLAPS #-} SQL.Result (Maybe SQLValue) where
   convert f bs = fmap (go (MySQL.fieldType f)) bs where
     go MySQL.VarString bs = SQLVarChar $ TE.decodeUtf8 bs
-    go MySQL.String bs = SQLText $ TE.decodeUtf8 bs
+    go MySQL.Blob bs = SQLText $ TE.decodeUtf8 bs
     go MySQL.LongLong bs = SQLBigInt $ (\(Right (x,"")) -> x) $ T.decimal $ TE.decodeUtf8 bs
     go MySQL.Long bs = SQLInt $ (\(Right (x,"")) -> x) $ T.decimal $ TE.decodeUtf8 bs
+    go x y = error ("unsupported type: " ++ show f ++ "; " ++ show bs)
 
 instance SQL.Result a => SQL.QueryResults [a] where
   convertResults = zipWith SQL.convert
 
 instance SQL.Param SQLValue where
-  render (SQLVarChar c) = SQL.Escape $ TE.encodeUtf8 c
-  render (SQLText c) = SQL.Escape $ TE.encodeUtf8 c
-  render (SQLBigInt c) = SQL.Plain $ Builder.putInt64host c
-  render (SQLInt c) = SQL.Plain $ Builder.putInt32host c
+  render (SQLVarChar c) = SQL.render c
+  render (SQLText c) = SQL.render c
+  render (SQLBigInt c) = SQL.render c
+  render (SQLInt c) = SQL.render c

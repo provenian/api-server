@@ -1,7 +1,10 @@
 module Web.Handler.Problems where
 
+import Control.Monad.IO.Class
 import Data.Aeson
+import Data.UnixTime
 import qualified Data.Text as T
+import Foreign.C.Types (CTime(..))
 import GHC.Generics
 import Servant
 
@@ -48,9 +51,11 @@ api =
  where
   post :: SnakeCase CreateReq -> HandlerM NoContent
   post (SnakeCase req) = do
+    time <- fromIntegral . (\(CTime c) -> c) . utSeconds <$> liftIO getUnixTime
+
     IProblemRepo.create
       useProblemRepo
-      (IProblemRepo.CreateInput (title req) "" "" 0 0 "" [] [] [])
+      (IProblemRepo.CreateInput (title req) "" "" time time "" [] [] [])
     return NoContent
 
   list :: HandlerM [SnakeCase Problem]

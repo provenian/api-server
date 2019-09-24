@@ -31,6 +31,8 @@ main = give Infra.Repository.ProblemRepo.new $ do
     ( defaultConnectInfo { connectDatabase = "provenian"
                          , connectUser     = "root"
                          , connectPassword = "password"
+                         , connectHost     = "127.0.0.1"
+                         , connectOptions  = [CharsetName "utf8mb4"]
                          }
     )
     10
