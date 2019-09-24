@@ -28,10 +28,10 @@ api = Proxy
 main :: IO ()
 main = give Infra.Repository.ProblemRepo.new $ do
   pool <- createSQLPool
-    ( defaultConnectInfoMB4 { ciDatabase = "provenian"
-                            , ciUser     = "root"
-                            , ciPassword = "password"
-                            }
+    ( defaultConnectInfo { connectDatabase = "provenian"
+                         , connectUser     = "root"
+                         , connectPassword = "password"
+                         }
     )
     10
   let appState = AppState {connPool = pool}

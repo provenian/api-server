@@ -2,8 +2,8 @@ module Infra.Repository.ProblemRepo where
 
 import Prelude hiding (id)
 import Control.Monad.Reader
-import qualified Database.MySQL.Base as SQL
 import Database.Generics.Mapper as Mapper
+import qualified Database.MySQL.Simple as SQL
 import Data.String (IsString(fromString))
 import qualified Data.Text as T
 import GHC.Generics
@@ -57,7 +57,6 @@ fromModel r = ProblemRecord
   (Text $ T.pack $ show $ Problem.languages r)
   (Text $ T.pack $ show $ Problem.tags r)
 
-
 data Repo = Repo
 
 new :: SomeProblemRepo
@@ -65,12 +64,12 @@ new = SomeProblemRepo Repo
 
 instance IProblemRepo Repo where
   getByID _ key = runSQL $ \conn -> liftIO $ do
-    (columns, result) <- SQL.query conn "SELECT * FROM `problem` WHERE id = ?" [SQL.MySQLText key]
-    mv <- IOS.read result
-    return $ fmap (toModel . deserialize) $ mv
+    result <- SQL.query conn "SELECT * FROM `problem` WHERE id = ?" [key]
+    return $ (\xs -> if length xs == 1 then Just (head xs) else Nothing) $ map (toModel . mapFromSQLValues . map (\(Just x) -> x)) result
   create _ input = runSQL $ \conn -> liftIO $ do
-    (_, result) <- SQL.query conn "INSERT INTO `problem` VALUE (?)" [SQL.Many $ serialize $ fromModel $ fromCreateInput input "1234"]
-    SQL.skipToEof result
+    [SQL.Only n] <- SQL.query conn "INSERT INTO `problem` VALUE (?)" (SQL.Only $ SQL.VaArgs $ mapToSQLValues $ fromModel $ fromCreateInput input "1234")
+    let _ = n :: Int
+    return ()
   list _ = runSQL $ \conn -> liftIO $ do
-    (_, result) <- SQL.query_ conn "SELECT * FROM `problem`"
-    fmap (map (toModel . deserialize)) $ IOS.toList result
+    result <- SQL.query_ conn "SELECT * FROM `problem`"
+    return $ map (toModel . mapFromSQLValues . map (\(Just x) -> x)) result
