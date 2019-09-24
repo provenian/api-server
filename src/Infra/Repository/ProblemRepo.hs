@@ -69,7 +69,7 @@ instance IProblemRepo Repo where
     mv <- IOS.read result
     return $ fmap (toModel . deserialize) $ mv
   create _ input = runSQL $ \conn -> liftIO $ do
-    (_, result) <- SQL.query conn "INSERT INTO `problem` VALUE (?,?,?,?,?,?,?,?,?,?)" (serialize $ fromModel $ fromCreateInput input "1234")
+    (_, result) <- SQL.query conn "INSERT INTO `problem` VALUE (?)" [SQL.Many $ serialize $ fromModel $ fromCreateInput input "1234"]
     SQL.skipToEof result
   list _ = runSQL $ \conn -> liftIO $ do
     (_, result) <- SQL.query_ conn "SELECT * FROM `problem`"

@@ -41,7 +41,13 @@ deserialize :: (Generic a, GMapper (Rep a)) => [SQL.MySQLValue] -> a
 deserialize = mapFromSQLValues . map fromMySQL
 
 asMySQL :: SQLValue -> SQL.MySQLValue
-asMySQL (SQLText t) = SQL.MySQLText t
+asMySQL = go
+ where
+  go (SQLText    t) = SQL.MySQLText t
+  go (SQLVarChar t) = SQL.MySQLText t
 
 fromMySQL :: SQL.MySQLValue -> SQLValue
-fromMySQL (SQL.MySQLText t) = SQLText t
+fromMySQL = go
+ where
+  go (SQL.MySQLText t) = SQLText t
+  go (SQL.MySQLText t) = SQLVarChar t
