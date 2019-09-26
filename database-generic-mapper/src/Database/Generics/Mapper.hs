@@ -7,10 +7,11 @@
 module Database.Generics.Mapper (
   GMapper(..),
   Mapper(..),
-  createTable,
   (:-)(..),
   mapToSQLValues,
   mapFromSQLValues,
+  createTable,
+  recordTypeOf,
 
   module Database.Generics.Mapper.MySQL,
 ) where
@@ -103,3 +104,7 @@ mapToSQLValues r = gmapTo $ from r
 
 mapFromSQLValues :: (Generic a, GMapper (Rep a)) => [SQLValue] -> a
 mapFromSQLValues vs = let (z, []) = gmapFrom vs in to z
+
+recordTypeOf
+  :: (Generic a, GMapper (Rep a)) => a -> (String, [(String, String, [String])])
+recordTypeOf = grecord . from

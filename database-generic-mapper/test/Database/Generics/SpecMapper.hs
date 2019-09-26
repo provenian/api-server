@@ -17,9 +17,14 @@ data Sample = Sample {
 spec_Sample_record :: Spec
 spec_Sample_record = do
   describe "Sample" $ do
-    it "should generate createTable query" $ do
-      createTable Sample{}
-        `shouldBe` "CREATE TABLE IF NOT EXISTS `Sample` (`key` varchar(20) PRIMARY KEY, `name` bigint NOT NULL, `single` text)"
+    it "should generate recordTypeOf" $ do
+      recordTypeOf Sample{}
+        `shouldBe` ( "Sample"
+                   , [ ("key"   , "varchar(20)", ["PRIMARY KEY"])
+                     , ("name"  , "bigint"     , ["NOT NULL"])
+                     , ("single", "text"       , [])
+                     ]
+                   )
     it "should mapToSQLValues" $ do
       mapToSQLValues (Sample (Field $ VarChar "foo") (Field $ BigInt 100) "bar")
         `shouldBe` [SQLVarChar "foo", SQLBigInt 100, SQLText "bar"]
