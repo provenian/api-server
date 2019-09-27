@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Database.Generics.SpecMapper where
 
+import qualified Data.Map as M
 import Database.Generics.Mapper
 import Database.Generics.Mapper.MySQL
 import Test.Tasty.Hspec
@@ -20,9 +21,10 @@ spec_Sample_record = do
     it "should generate recordTypeOf" $ do
       recordTypeOf Sample{}
         `shouldBe` ( "Sample"
-                   , [ ("key"   , "varchar(20)", ["PRIMARY KEY"])
-                     , ("name"  , "bigint"     , ["NOT NULL"])
-                     , ("single", "text"       , [])
+                   , M.fromList
+                     [ ("key"   , ("varchar(20)", ["PRIMARY KEY"]))
+                     , ("name"  , ("bigint", ["NOT NULL"]))
+                     , ("single", ("text", []))
                      ]
                    )
     it "should mapToSQLValues" $ do

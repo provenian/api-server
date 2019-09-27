@@ -18,6 +18,7 @@ module Database.Generics.Mapper (
 
 import Data.Proxy
 import Data.List
+import qualified Data.Map as M
 import Generics.Deriving
 import GHC.Generics
 import GHC.TypeLits
@@ -106,5 +107,10 @@ mapFromSQLValues :: (Generic a, GMapper (Rep a)) => [SQLValue] -> a
 mapFromSQLValues vs = let (z, []) = gmapFrom vs in to z
 
 recordTypeOf
-  :: (Generic a, GMapper (Rep a)) => a -> (String, [(String, String, [String])])
-recordTypeOf = grecord . from
+  :: (Generic a, GMapper (Rep a))
+  => a
+  -> (String, M.Map String (String, [String]))
+recordTypeOf =
+  (\(x, y) -> (x, M.fromList $ map (\(a, b, c) -> (a, (b, c))) y))
+    . grecord
+    . from
