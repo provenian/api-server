@@ -31,53 +31,49 @@ class GMapper f where
   grecord :: f p -> (String, [(String, String, [String])])
   gfields :: f p -> [(String, String, [String])]
   gfield :: f p -> (String, String, [String])
-  gattrs :: f p -> (String, [String])
 
   gmapsTo :: f p -> [(String, SQLValue)]
-  gmapFrom :: [SQLValue] -> (f p, [SQLValue])
+  gmapsFrom :: f p -> M.Map String SQLValue -> f p
 
 class GSelector f where
+  gattrs :: f p -> (String, [String])
   gmapTo :: f p -> SQLValue
+  gmapFrom :: SQLValue -> f p
 
 instance (Datatype d, GMapper t) => GMapper (D1 d t) where
   grecord (x :: D1 d t p) = (datatypeName (undefined :: M1 _i d _f _p), gfields (unM1 x))
 
   gmapsTo x = gmapsTo (unM1 x)
-  gmapFrom = (\(x,y) -> (M1 x,y)) . gmapFrom
+  gmapsFrom r = M1 . gmapsFrom (unM1 r)
 
 instance GMapper t => GMapper (C1 d t) where
   gfields x = gfields $ unM1 x
 
   gmapsTo x = gmapsTo (unM1 x)
-  gmapFrom = (\(x,y) -> (M1 x,y)) . gmapFrom
+  gmapsFrom r = M1 . gmapsFrom (unM1 r)
 
 instance (GMapper r1, GMapper r2) => GMapper (r1 :*: r2) where
   gfields (r1 :*: r2) = gfields r1 ++ gfields r2
 
   gmapsTo (r1 :*: r2) = gmapsTo r1 ++ gmapsTo r2
-  gmapFrom xs = let (r1, ys) = gmapFrom xs; (r2, zs) = gmapFrom ys in (r1:*:r2, zs)
+  gmapsFrom (r1 :*: r2) xs = gmapsFrom r1 xs :*: gmapsFrom r2 xs
 
-instance (Selector d, GMapper t, GSelector t) => GMapper (S1 d t) where
+instance (Selector d, GSelector t) => GMapper (S1 d t) where
   gfields r = [gfield r]
   gfield s = let (ft,attrs) = gattrs (unM1 s) in (selName s, ft, attrs)
 
   gmapsTo r = [(selName r, gmapTo (unM1 r))]
-  gmapFrom = (\(x,y) -> (M1 x,y)) . gmapFrom
+  gmapsFrom r mp = M1 $ gmapFrom (mp M.! selName r)
 
 instance (Mapper attrs, SQLField t) => GSelector (Rec0 (t :- attrs)) where
+  gattrs (x :: Rec0 (t :- attrs) p) = (fieldType (undefined :: t), attrs (Proxy :: Proxy attrs))
   gmapTo = encode . getField . unK1
+  gmapFrom = K1 . Field . decode
 
 instance {-# OVERLAPS #-} SQLField r => GSelector (Rec0 r) where
-  gmapTo = encode . unK1
-
-
-instance (Mapper attrs, SQLField t) => GMapper (Rec0 (t :- attrs)) where
-  gattrs (x :: Rec0 (t :- attrs) p) = (fieldType (undefined :: t), attrs (Proxy :: Proxy attrs))
-  gmapFrom (x:xs) = (K1 $ Field $ decode x, xs)
-
-instance {-# OVERLAPS #-} SQLField r => GMapper (Rec0 r) where
   gattrs (x :: Rec0 r p) = (fieldType (undefined :: r), [])
-  gmapFrom (x:xs) = (K1 $ decode x, xs)
+  gmapTo = encode . unK1
+  gmapFrom = K1 . decode
 
 class Mapper a where
   attrs :: Proxy a -> [String]
@@ -109,8 +105,9 @@ createTable a =
 mapToSQLValues :: (Generic a, GMapper (Rep a)) => a -> [(String, SQLValue)]
 mapToSQLValues = gmapsTo . from
 
-mapFromSQLValues :: (Generic a, GMapper (Rep a)) => [SQLValue] -> a
-mapFromSQLValues vs = let (z, []) = gmapFrom vs in to z
+mapFromSQLValues
+  :: (Generic a, GMapper (Rep a)) => a -> M.Map String SQLValue -> a
+mapFromSQLValues r = to . gmapsFrom (from r)
 
 recordTypeOf
   :: (Generic a, GMapper (Rep a))

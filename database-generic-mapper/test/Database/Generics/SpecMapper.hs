@@ -34,8 +34,24 @@ spec_Sample_record = do
                    , ("single", SQLText "bar")
                    ]
     it "should mapFromSQLValues" $ do
-      mapFromSQLValues [SQLVarChar "foo", SQLBigInt 100, SQLText "bar"]
-        `asTypeOf` Sample{}
+      mapFromSQLValues
+          Sample{}
+          ( M.fromList
+            [ ("key"   , SQLVarChar "foo")
+            , ("name"  , SQLBigInt 100)
+            , ("single", SQLText "bar")
+            ]
+          )
+        `shouldBe` (Sample (Field $ VarChar "foo") (Field $ BigInt 100) "bar")
+    it "should mapFromSQLValues with random order" $ do
+      mapFromSQLValues
+          Sample{}
+          ( M.fromList
+            [ ("single", SQLText "bar")
+            , ("name"  , SQLBigInt 100)
+            , ("key"   , SQLVarChar "foo")
+            ]
+          )
         `shouldBe` (Sample (Field $ VarChar "foo") (Field $ BigInt 100) "bar")
 
 data ManyFields = ManyFields {
