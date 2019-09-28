@@ -29,7 +29,10 @@ spec_Sample_record = do
                    )
     it "should mapToSQLValues" $ do
       mapToSQLValues (Sample (Field $ VarChar "foo") (Field $ BigInt 100) "bar")
-        `shouldBe` [SQLVarChar "foo", SQLBigInt 100, SQLText "bar"]
+        `shouldBe` [ ("key"   , SQLVarChar "foo")
+                   , ("name"  , SQLBigInt 100)
+                   , ("single", SQLText "bar")
+                   ]
     it "should mapFromSQLValues" $ do
       mapFromSQLValues [SQLVarChar "foo", SQLBigInt 100, SQLText "bar"]
         `asTypeOf` Sample{}
