@@ -4,6 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ConstraintKinds #-}
 module Database.Generics.Mapper (
   GMapper(..),
   Mapper(..),
@@ -12,6 +13,7 @@ module Database.Generics.Mapper (
   mapFromSQLValues,
   createTable,
   recordTypeOf,
+  RMapper,
 
   module Database.Generics.Mapper.MySQL,
 ) where
@@ -102,17 +104,15 @@ createTable a =
         , ")"
         ]
 
-mapToSQLValues :: (Generic a, GMapper (Rep a)) => a -> [(String, SQLValue)]
+type RMapper a = (Generic a, GMapper (Rep a))
+
+mapToSQLValues :: RMapper a => a -> [(String, SQLValue)]
 mapToSQLValues = gmapsTo . from
 
-mapFromSQLValues
-  :: (Generic a, GMapper (Rep a)) => a -> M.Map String SQLValue -> a
+mapFromSQLValues :: RMapper a => a -> M.Map String SQLValue -> a
 mapFromSQLValues r = to . gmapsFrom (from r)
 
-recordTypeOf
-  :: (Generic a, GMapper (Rep a))
-  => a
-  -> (String, M.Map String (String, [String]))
+recordTypeOf :: RMapper a => a -> (String, M.Map String (String, [String]))
 recordTypeOf =
   (\(x, y) -> (x, M.fromList $ map (\(a, b, c) -> (a, (b, c))) y))
     . grecord
