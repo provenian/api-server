@@ -53,6 +53,11 @@ spec_Sample_record = do
             ]
           )
         `shouldBe` (Sample (Field $ VarChar "foo") (Field $ BigInt 100) "bar")
+    it "should mapFromSQLValues with default values" $ do
+      mapFromSQLValues
+          Sample {key = Field $ VarChar "def", name = Field $ BigInt (-1)}
+          (M.fromList [("name", SQLBigInt 100), ("single", SQLText "bar")])
+        `shouldBe` (Sample (Field $ VarChar "def") (Field $ BigInt 100) "bar")
 
 data ManyFields = ManyFields {
   f1 :: String,

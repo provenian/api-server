@@ -65,7 +65,7 @@ instance (Selector d, GSelector t) => GMapper (S1 d t) where
   gfield s = let (ft,attrs) = gattrs (unM1 s) in (selName s, ft, attrs)
 
   gmapsTo r = [(selName r, gmapTo (unM1 r))]
-  gmapsFrom r mp = M1 $ gmapFrom (mp M.! selName r)
+  gmapsFrom r mp = maybe r (M1 . gmapFrom) (mp M.!? selName r)
 
 instance (Mapper attrs, SQLField t) => GSelector (Rec0 (t :- attrs)) where
   gattrs (x :: Rec0 (t :- attrs) p) = (fieldType (undefined :: t), attrs (Proxy :: Proxy attrs))
