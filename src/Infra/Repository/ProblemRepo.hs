@@ -2,9 +2,10 @@ module Infra.Repository.ProblemRepo where
 
 import Prelude hiding (id)
 import Control.Monad.Reader
+import Data.List
+import Data.String (IsString(fromString))
 import Database.Generics.Mapper as Mapper
 import qualified Database.MySQL.Simple as SQL
-import Data.String (IsString(fromString))
 import qualified Data.Text as T
 import GHC.Generics
 import qualified System.IO.Streams as IOS
@@ -64,11 +65,12 @@ new = SomeProblemRepo Repo
 
 instance IProblemRepo Repo where
   getByID _ key = runSQL $ \conn -> liftIO $ do
-    result <- SQL.query conn "SELECT * FROM `ProblemRecord` WHERE id = ?" [key]
-    return $ (\xs -> if length xs == 1 then Just (head xs) else Nothing) $ map (toModel . mapFromSQLValues . map (\(Just x) -> x)) result
+    result <- queryWith conn "SELECT * FROM `ProblemRecord` WHERE id = ?" [key] ProblemRecord{}
+    return $ (\xs -> if length xs == 1 then Just (head xs) else Nothing) $ map toModel $ result
   create _ input = runSQL $ \conn -> liftIO $ do
-    _ <- SQL.execute conn "INSERT INTO `ProblemRecord` VALUE (?)" (SQL.Only $ SQL.VaArgs $ mapToSQLValues $ fromModel $ fromCreateInput input "1234")
+    let pairs = mapToSQLValues $ fromModel $ fromCreateInput input "1234"
+    let columns = map fst pairs
+    let values = map snd pairs
+    _ <- SQL.execute conn (fromString $ "INSERT INTO `ProblemRecord` (" ++ intercalate "," columns ++ ") VALUES (?)") (SQL.Only $ SQL.VaArgs values)
     return ()
-  list _ = runSQL $ \conn -> liftIO $ do
-    result <- SQL.query_ conn "SELECT * FROM `ProblemRecord`"
-    return $ map (toModel . mapFromSQLValues . map (\(Just x) -> x)) result
+  list _ = fmap (map toModel) $ runSQL $ \conn -> liftIO $ queryWith_ conn "SELECT * FROM `ProblemRecord`" ProblemRecord{}
