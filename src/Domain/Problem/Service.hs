@@ -1,5 +1,6 @@
 module Domain.Problem.Service where
 
+import Control.Monad.Trans.Control
 import Control.Monad.IO.Class
 import Data.UnixTime
 import Foreign.C.Types (CTime(..))
@@ -11,10 +12,14 @@ import qualified Domain.Problem.IProblemRepo as I
 
 data ProblemService = I.UseProblemRepo => ProblemService
 
+new :: I.UseProblemRepo => ProblemService
+new = ProblemService
+
 create
-  :: ProblemService
+  :: (MonadIO m, MonadBaseControl IO m)
+  => ProblemService
   -> Domain.Problem.Model.CreateInput.CreateInput
-  -> HandlerM ()
+  -> AppM m ()
 create ProblemService input = do
   time <- fromIntegral . (\(CTime c) -> c) . utSeconds <$> liftIO getUnixTime
 
@@ -32,5 +37,5 @@ create ProblemService input = do
       []
     )
 
-list :: ProblemService -> HandlerM [Problem]
+list :: (MonadIO m, MonadBaseControl IO m) => ProblemService -> AppM m [Problem]
 list ProblemService = I.list I.useProblemRepo

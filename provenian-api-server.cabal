@@ -20,7 +20,10 @@ extra-source-files:  CHANGELOG.md
 library
   exposed-modules:
     Domain.App
-    Domain.InfraInterface.IProblemRepo
+    Domain.Problem.Model.Problem
+    Domain.Problem.Model.CreateInput
+    Domain.Problem.IProblemRepo
+    Domain.Problem.Service
     Domain.Problem
     Domain.Submission
     Driver.MySQL
@@ -78,18 +81,34 @@ executable server
     warp,
   hs-source-dirs:      app
   default-language:    Haskell2010
-  default-extensions:
 
-test-suite api-tests
+--test-suite api-tests
+--  type: exitcode-stdio-1.0
+--  main-is: test/API/Spec.hs
+--  build-depends:
+--    base,
+--    tasty,
+--    tasty-hspec,
+--    provenian-api-server,
+--    servant,
+--    servant-client,
+--    http-client,
+--  default-language:    Haskell2010
+
+test-suite unit-tests
   type: exitcode-stdio-1.0
-  main-is: API/Spec.hs
+  main-is: Driver.hs
+  build-tool-depends:
+    tasty-discover:tasty-discover >= 4.2 && < 4.3,
   build-depends:
     base,
     tasty,
     tasty-hspec,
     provenian-api-server,
-    servant,
-    servant-client,
-    http-client,
+    containers,
+    reflection,
+    mtl,
   hs-source-dirs:      test
   default-language:    Haskell2010
+  default-extensions:
+    OverloadedStrings

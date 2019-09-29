@@ -9,7 +9,8 @@ data AppState = AppState
   { connPool :: ConnPool
   }
 
-type HandlerM = ReaderT AppState Handler
+type AppM m = ReaderT AppState m
+type HandlerM = AppM Handler
 
 instance HasConnPool AppState where
   _ConnPool = connPool
