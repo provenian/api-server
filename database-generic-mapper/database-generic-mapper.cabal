@@ -40,8 +40,6 @@ test-suite tests
     base,
     tasty,
     tasty-hspec,
-    containers,
-    database-generic-mapper,
   hs-source-dirs:      test
   default-language:    Haskell2010
   default-extensions:

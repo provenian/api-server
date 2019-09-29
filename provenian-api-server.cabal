@@ -17,10 +17,8 @@ category:            Network
 build-type:          Simple
 extra-source-files:  CHANGELOG.md
 
-executable provenian-api-server
-  main-is:             Main.hs
-  --  other-extensions:
-  other-modules:
+library
+  exposed-modules:
     Domain.App
     Domain.InfraInterface.IProblemRepo
     Domain.Problem
@@ -30,6 +28,7 @@ executable provenian-api-server
     Web.Handler.Problems
     Web.Handler.Submissions
     Web.Presenters
+    API
   build-depends:
     base ^>=4.12.0.0,
     servant,
@@ -66,3 +65,33 @@ executable provenian-api-server
     OverloadedStrings
     FlexibleContexts
     FlexibleInstances
+
+executable server
+  main-is:             Main.hs
+  --  other-extensions:
+  build-depends:
+    base ^>=4.12.0.0,
+    provenian-api-server,
+    reflection,
+    mtl,
+    servant-server,
+    warp,
+  hs-source-dirs:      app
+  default-language:    Haskell2010
+  default-extensions:
+
+test-suite api-tests
+  type: exitcode-stdio-1.0
+  main-is: Driver.hs
+  build-tool-depends:
+    tasty-discover:tasty-discover >= 4.2 && < 4.3,
+  build-depends:
+    base,
+    tasty,
+    tasty-hspec,
+    containers,
+    database-generic-mapper,
+  hs-source-dirs:      test
+  default-language:    Haskell2010
+  default-extensions:
+    DeriveGeneric

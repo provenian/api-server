@@ -1,29 +1,14 @@
 module Main where
 
 import Control.Monad.Reader
-import Control.Monad.Logger (runStdoutLoggingT)
-import Data.Proxy
 import Data.Reflection
-import Network.Wai
 import Network.Wai.Handler.Warp (run)
 import Servant
 
+import API (api, server)
+import Domain.App
 import Driver.MySQL
-import Domain.App (HandlerM, AppState(..))
-import Domain.InfraInterface.IProblemRepo
-import qualified Web.Handler.Problems
-import qualified Web.Handler.Submissions
-import qualified Infra.Repository.ProblemRepo
-
-type API =
-  "problems" :> Web.Handler.Problems.API
-  :<|> "submissions" :> Web.Handler.Submissions.API
-
-server :: UseProblemRepo => ServerT API HandlerM
-server = Web.Handler.Problems.api :<|> Web.Handler.Submissions.api
-
-api :: Proxy API
-api = Proxy
+import Infra.Repository.ProblemRepo
 
 main :: IO ()
 main = give Infra.Repository.ProblemRepo.new $ do
