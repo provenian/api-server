@@ -82,16 +82,14 @@ executable server
 
 test-suite api-tests
   type: exitcode-stdio-1.0
-  main-is: Driver.hs
-  build-tool-depends:
-    tasty-discover:tasty-discover >= 4.2 && < 4.3,
+  main-is: API/Spec.hs
   build-depends:
     base,
     tasty,
     tasty-hspec,
-    containers,
-    database-generic-mapper,
+    provenian-api-server,
+    servant,
+    servant-client,
+    http-client,
   hs-source-dirs:      test
   default-language:    Haskell2010
-  default-extensions:
-    DeriveGeneric

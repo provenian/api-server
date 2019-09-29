@@ -15,7 +15,7 @@ data Problem = Problem {
   files :: [T.Text],
   languages :: [T.Text],
   tags :: [T.Text]
-} deriving (Generic, Show)
+} deriving (Generic, Eq, Show)
 
 instance ToJSON Problem
 instance FromJSON Problem

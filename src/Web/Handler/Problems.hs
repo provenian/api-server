@@ -35,6 +35,7 @@ data CreateReq = ProblemCreateReq {
   title :: T.Text
 } deriving (Generic)
 
+instance ToJSON CreateReq
 instance FromJSON CreateReq
 
 api :: UseProblemRepo => ServerT API HandlerM

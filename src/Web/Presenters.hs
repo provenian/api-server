@@ -8,6 +8,7 @@ import Data.Aeson.Casing
 import GHC.Generics (Generic, Rep)
 
 newtype SnakeCase a = SnakeCase a
+  deriving (Eq, Show)
 
 instance (ToJSON a, Generic a, GToJSON Zero (Rep a)) => ToJSON (SnakeCase a) where
   toJSON (SnakeCase p) = genericToJSON (aesonDrop 0 snakeCase) p
