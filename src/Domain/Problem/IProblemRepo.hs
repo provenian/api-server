@@ -1,8 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Domain.InfraInterface.IProblemRepo (
-  CreateInput(CreateInput),
-  fromCreateInput,
+module Domain.Problem.IProblemRepo (
   IProblemRepo(..),
   SomeProblemRepo(..),
   UseProblemRepo,
@@ -14,31 +12,8 @@ import Control.Monad.Reader
 import qualified Data.Text as T
 import Data.Reflection (Given, given)
 import Domain.App
-import Domain.Problem (Problem(Problem))
-
-data CreateInput = CreateInput {
-  title :: T.Text,
-  contentType :: T.Text,
-  content :: T.Text,
-  createdAt :: Int,
-  updatedAt :: Int,
-  writer :: T.Text,
-  files :: [T.Text],
-  languages :: [T.Text],
-  tags :: [T.Text]
-}
-
-fromCreateInput :: CreateInput -> T.Text -> Problem
-fromCreateInput i key = Problem key
-                                (title i)
-                                (contentType i)
-                                (content i)
-                                (createdAt i)
-                                (updatedAt i)
-                                (writer i)
-                                (files i)
-                                (languages i)
-                                (tags i)
+import Domain.Problem.Model.Problem (Problem)
+import Domain.Problem.Model.CreateInput (CreateInput)
 
 class IProblemRepo r where
   getByID :: (MonadIO m, MonadBaseControl IO m) => r -> T.Text -> ReaderT AppState m (Maybe Problem)

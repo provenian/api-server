@@ -2,24 +2,21 @@ module Web.Handler.Problems where
 
 import Control.Monad.IO.Class
 import Data.Aeson
-import Data.UnixTime
 import qualified Data.Text as T
-import Foreign.C.Types (CTime(..))
 import GHC.Generics
 import Servant
 
 import Domain.App
-import Domain.Problem (Problem)
+import Domain.Problem (Problem, useProblemRepo, UseProblemRepo, ProblemService, CreateInput)
 import qualified Domain.Problem
-import Domain.InfraInterface.IProblemRepo (useProblemRepo, UseProblemRepo)
-import qualified Domain.InfraInterface.IProblemRepo as IProblemRepo
+import qualified Domain.Problem.IProblemRepo as IProblemRepo
 import Domain.Submission (Submission)
 import qualified Domain.Submission
 
 import Web.Presenters (SnakeCase(SnakeCase))
 
 type API =
-  ReqBody '[JSON] (SnakeCase CreateReq) :> Post '[JSON] NoContent
+  ReqBody '[JSON] (SnakeCase CreateInput) :> Post '[JSON] NoContent
   :<|> Get '[JSON] [SnakeCase Problem]
   :<|> "drafts" :> Get '[JSON] [SnakeCase Problem]
   :<|> Capture "problemId" String :>
@@ -31,15 +28,8 @@ type API =
       )
     )
 
-data CreateReq = ProblemCreateReq {
-  title :: T.Text
-} deriving (Generic)
-
-instance ToJSON CreateReq
-instance FromJSON CreateReq
-
-api :: UseProblemRepo => ServerT API HandlerM
-api =
+api :: ProblemService -> ServerT API HandlerM
+api problemService =
   post
     :<|> list
     :<|> drafts
@@ -50,17 +40,13 @@ api =
              :<|> submit problemId
          )
  where
-  post :: SnakeCase CreateReq -> HandlerM NoContent
+  post :: SnakeCase CreateInput -> HandlerM NoContent
   post (SnakeCase req) = do
-    time <- fromIntegral . (\(CTime c) -> c) . utSeconds <$> liftIO getUnixTime
-
-    IProblemRepo.create
-      useProblemRepo
-      (IProblemRepo.CreateInput (title req) "" "" time time "" [] [] [])
+    Domain.Problem.create problemService req
     return NoContent
 
   list :: HandlerM [SnakeCase Problem]
-  list = fmap (map SnakeCase) $ IProblemRepo.list useProblemRepo
+  list = fmap (map SnakeCase) $ Domain.Problem.list problemService
 
   drafts :: HandlerM [SnakeCase Problem]
   drafts = return []

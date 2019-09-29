@@ -1,21 +1,11 @@
-module Domain.Problem where
+module Domain.Problem (
+  module Domain.Problem.Model.Problem,
+  module Domain.Problem.Model.CreateInput,
+  module Domain.Problem.IProblemRepo,
+  module Domain.Problem.Service,
+) where
 
-import Data.Aeson
-import qualified Data.Text as T
-import GHC.Generics
-
-data Problem = Problem {
-  id :: T.Text,
-  title :: T.Text,
-  contentType :: T.Text,
-  content :: T.Text,
-  createdAt :: Int,
-  updatedAt :: Int,
-  writer :: T.Text,
-  files :: [T.Text],
-  languages :: [T.Text],
-  tags :: [T.Text]
-} deriving (Generic, Eq, Show)
-
-instance ToJSON Problem
-instance FromJSON Problem
+import Domain.Problem.Model.CreateInput (CreateInput(CreateInput))
+import Domain.Problem.Model.Problem (Problem(..))
+import Domain.Problem.IProblemRepo (useProblemRepo, UseProblemRepo)
+import Domain.Problem.Service

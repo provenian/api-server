@@ -13,8 +13,9 @@ import qualified System.IO.Streams as IOS
 import Driver.MySQL
 import Domain.App
 import Domain.Problem (Problem(Problem))
+import qualified Domain.Problem.Model.CreateInput as CreateInput
 import qualified Domain.Problem as Problem
-import Domain.InfraInterface.IProblemRepo
+import Domain.Problem.IProblemRepo
 
 data ProblemRecord = ProblemRecord {
   id :: VarChar 26 :- '["PRIMARY KEY"],
@@ -68,7 +69,7 @@ instance IProblemRepo Repo where
     result <- queryWith conn "SELECT * FROM `ProblemRecord` WHERE id = ?" [key] ProblemRecord{}
     return $ (\xs -> if length xs == 1 then Just (head xs) else Nothing) $ map toModel $ result
   create _ input = runSQL $ \conn -> liftIO $ do
-    let pairs = mapToSQLValues $ fromModel $ fromCreateInput input "1234"
+    let pairs = mapToSQLValues $ fromModel $ CreateInput.fromCreateInput input "1234"
     let columns = map fst pairs
     let values = map snd pairs
     _ <- SQL.execute conn (fromString $ "INSERT INTO `ProblemRecord` (" ++ intercalate "," columns ++ ") VALUES (?)") (SQL.Only $ SQL.VaArgs values)
