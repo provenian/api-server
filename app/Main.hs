@@ -7,11 +7,16 @@ import Servant
 
 import API (api, server)
 import Domain.App
+import qualified Domain.Problem.Service
 import Driver.MySQL
 import Infra.Repository.ProblemRepo
 
+problemService :: Domain.Problem.Service.ProblemService
+problemService =
+  give Infra.Repository.ProblemRepo.new $ Domain.Problem.Service.new
+
 main :: IO ()
-main = give Infra.Repository.ProblemRepo.new $ do
+main = do
   pool <- createSQLPool
     ( defaultConnectInfo { connectDatabase = "provenian"
                          , connectUser     = "root"
@@ -26,6 +31,8 @@ main = give Infra.Repository.ProblemRepo.new $ do
   flip runReaderT appState $ do
     Infra.Repository.ProblemRepo.createTable
 
-  liftIO $ run 1234 $ serve api $ hoistServer api
-                                              (flip runReaderT appState)
-                                              server
+  liftIO
+    $ run 1234
+    $ serve api
+    $ hoistServer api (flip runReaderT appState)
+    $ server problemService

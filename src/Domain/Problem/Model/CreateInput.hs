@@ -1,7 +1,9 @@
 module Domain.Problem.Model.CreateInput where
 
+import Data.Aeson
 import Domain.Problem.Model.Problem (Problem(Problem))
 import qualified Data.Text as T
+import GHC.Generics (Generic)
 
 data CreateInput = CreateInput {
   title :: T.Text,
@@ -13,7 +15,10 @@ data CreateInput = CreateInput {
   files :: [T.Text],
   languages :: [T.Text],
   tags :: [T.Text]
-}
+} deriving (Generic)
+
+instance FromJSON CreateInput
+instance ToJSON CreateInput
 
 fromCreateInput :: CreateInput -> T.Text -> Problem
 fromCreateInput i key = Problem key
@@ -26,3 +31,4 @@ fromCreateInput i key = Problem key
                                 (files i)
                                 (languages i)
                                 (tags i)
+

@@ -27,6 +27,7 @@ library
     Domain.Problem
     Domain.Submission
     Driver.MySQL
+    Infra.Repository.ProblemRecord
     Infra.Repository.ProblemRepo
     Web.Handler.Problems
     Web.Handler.Submissions
