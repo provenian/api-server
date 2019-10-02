@@ -9,7 +9,8 @@ import API (api, server)
 import Domain.App
 import qualified Domain.Service.Problem
 import Driver.MySQL
-import Infra.Repository.ProblemRepo
+import qualified Infra.Repository.ProblemRepo
+import Infra.Repository.ProblemRecord (ProblemRecord(ProblemRecord))
 
 problemService :: Domain.Service.Problem.ProblemService
 problemService =
@@ -30,6 +31,8 @@ main = do
 
   flip runReaderT appState $ do
     Infra.Repository.ProblemRepo.createTable
+
+    runSQL $ \conn -> migrate conn ProblemRecord{}
 
   liftIO
     $ run 1234

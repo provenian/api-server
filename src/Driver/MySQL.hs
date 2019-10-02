@@ -14,12 +14,15 @@ module Driver.MySQL (
   createTableOf,
   createTable,
   createTableWithName,
+  migrateColumn,
+  migrate,
 ) where
 
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl(..))
 import Data.Pool
 import Data.List
+import Data.String (IsString(fromString))
 import qualified Data.Map as M
 import qualified Data.Binary.Builder as Builder
 import qualified Data.Text as T
@@ -48,17 +51,6 @@ runSQL m = ask >>= \s -> withResource (getPool $ _ConnPool s) (lift . m)
 createSQLPool :: MonadIO m => SQL.ConnectInfo -> Int -> m ConnPool
 createSQLPool conn m =
   liftIO $ fmap ConnPool $ createPool (SQL.connect conn) SQL.close 1 5 m
-
-instance {-# OVERLAPS #-} SQL.Result (Maybe SQLValue) where
-  convert f bs = fmap (go (MySQL.fieldType f)) bs where
-    go MySQL.VarString bs = SQLVarChar $ TE.decodeUtf8 bs
-    go MySQL.Blob bs = SQLText $ TE.decodeUtf8 bs
-    go MySQL.LongLong bs = SQLBigInt $ (\(Right (x,"")) -> x) $ T.decimal $ TE.decodeUtf8 bs
-    go MySQL.Long bs = SQLInt $ (\(Right (x,"")) -> x) $ T.decimal $ TE.decodeUtf8 bs
-    go x y = error ("unsupported type: " ++ show f ++ "; " ++ show bs)
-
-instance SQL.Result a => SQL.QueryResults [a] where
-  convertResults = zipWith SQL.convert
 
 instance SQL.Param SQLValue where
   render (SQLVarChar c) = SQL.render c
@@ -131,3 +123,38 @@ createTable a = uncurry createTableOf (grecord (from a))
 createTableWithName :: (Generic a, GMapper (Rep a)) => T.Text -> a -> T.Text
 createTableWithName tableName a =
   uncurry (\_ -> createTableOf tableName) (grecord (from a))
+
+migrateColumn
+  :: SQL.Connection
+  -> T.Text  -- ^ table name
+  -> T.Text  -- ^ column name
+  -> T.Text  -- ^ field type
+  -> [T.Text]  -- ^ field attributes
+  -> IO ()
+migrateColumn conn tableName columnName field attrs = do
+  [SQL.Only c] <- SQL.query
+    conn
+    "select COLUMN_TYPE from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? and COLUMN_NAME = ?"
+    (tableName, columnName)
+
+  -- not checking field attrs here!
+  when (c /= field) $ do
+    void $ SQL.execute_ conn $ fromString $ T.unpack $ T.concat
+      [ "alter table `"
+      , tableName
+      , "` modify column "
+      , columnName
+      , " "
+      , field
+      , " "
+      , T.intercalate " " attrs
+      ]
+
+-- ALTER TABLE table_name DROP PRIMARY KEY, ADD PRIMARY KEY (id);
+
+migrate :: (Generic a, GMapper (Rep a)) => SQL.Connection -> a -> IO ()
+migrate conn entity = do
+  let (tableName, fields) = grecord $ from entity
+
+  forM_ fields $ \(fieldName, fieldType, attrs) ->
+    migrateColumn conn tableName fieldName fieldType attrs

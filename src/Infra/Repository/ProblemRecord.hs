@@ -11,7 +11,7 @@ import Domain.Model
 import qualified Domain.Model.Problem.Problem as Problem
 
 data ProblemRecord = ProblemRecord {
-  id :: VarChar 26 :- '["PRIMARY KEY"],
+  id :: VarChar 36 :- '["PRIMARY KEY"],
   title :: VarChar 1024,
   contentType :: VarChar 128,
   content :: VarChar 1024,
