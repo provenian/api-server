@@ -2,8 +2,10 @@ module Infra.Repository.ProblemRepo where
 
 import Control.Monad.Reader
 import Data.List (intercalate)
-import qualified Data.Text as T
 import Data.String (IsString(fromString))
+import qualified Data.Text as T
+import qualified Data.UUID as UUID
+import qualified Data.UUID.V4 as UUID
 
 import Database.Generics.Mapper
 import qualified Database.MySQL.Simple as SQL
@@ -28,7 +30,8 @@ instance IProblemRepo Repo where
     result <- queryWith conn "SELECT * FROM `ProblemRecord` WHERE id = ?" [key] ProblemRecord{}
     return $ (\xs -> if length xs == 1 then Just (head xs) else Nothing) $ map toModel $ result
   create _ input = runSQL $ \conn -> liftIO $ do
-    let pairs = mapToSQLValues $ fromModel $ CreateInput.fromCreateInput input "1234"
+    uuid <- UUID.toText <$> UUID.nextRandom
+    let pairs = mapToSQLValues $ fromModel $ CreateInput.fromCreateInput input uuid
     let columns = map fst pairs
     let values = map snd pairs
     _ <- SQL.execute conn (fromString $ T.unpack $ "INSERT INTO `ProblemRecord` (" `T.append` T.intercalate "," columns `T.append` ") VALUES (?)") (SQL.Only $ SQL.VaArgs values)
