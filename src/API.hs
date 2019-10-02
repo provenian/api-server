@@ -4,7 +4,7 @@ import Servant
 import Data.Proxy
 import Driver.MySQL
 import Domain.App (HandlerM, AppState(..))
-import Domain.Problem (ProblemService)
+import Domain.Service.Problem (ProblemService)
 import qualified Web.Handler.Problems
 import qualified Web.Handler.Submissions
 

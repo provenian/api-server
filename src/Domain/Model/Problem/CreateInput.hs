@@ -1,7 +1,7 @@
-module Domain.Problem.Model.CreateInput where
+module Domain.Model.Problem.CreateInput where
 
 import Data.Aeson
-import Domain.Problem.Model.Problem (Problem(Problem))
+import Domain.Model.Problem.Problem (Problem(Problem))
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 

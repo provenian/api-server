@@ -1,4 +1,4 @@
-module Domain.Problem.Model.Problem where
+module Domain.Model.Problem.Problem where
 
 import Data.Aeson
 import qualified Data.Text as T

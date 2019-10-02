@@ -7,9 +7,11 @@ import GHC.Generics
 import Servant
 
 import Domain.App
-import Domain.Problem (Problem, useProblemRepo, UseProblemRepo, ProblemService, CreateInput)
-import qualified Domain.Problem
-import qualified Domain.Problem.IProblemRepo as IProblemRepo
+import Domain.Model
+import Domain.Interface.IProblemRepo (useProblemRepo, UseProblemRepo)
+import Domain.Service.Problem (ProblemService)
+import qualified Domain.Service.Problem as ProblemService
+import qualified Domain.Interface.IProblemRepo as IProblemRepo
 import Domain.Submission (Submission)
 import qualified Domain.Submission
 
@@ -42,11 +44,11 @@ api problemService =
  where
   post :: SnakeCase CreateInput -> HandlerM NoContent
   post (SnakeCase req) = do
-    Domain.Problem.create problemService req
+    ProblemService.create problemService req
     return NoContent
 
   list :: HandlerM [SnakeCase Problem]
-  list = fmap (map SnakeCase) $ Domain.Problem.list problemService
+  list = fmap (map SnakeCase) $ ProblemService.list problemService
 
   drafts :: HandlerM [SnakeCase Problem]
   drafts = return []

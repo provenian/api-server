@@ -1,6 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Domain.Problem.IProblemRepo (
+module Domain.Interface.IProblemRepo (
   IProblemRepo(..),
   SomeProblemRepo(..),
   UseProblemRepo,
@@ -13,8 +13,8 @@ import qualified Data.Text as T
 import Data.Reflection (Given, given)
 
 import Domain.App
-import Domain.Problem.Model.Problem (Problem)
-import Domain.Problem.Model.CreateInput (CreateInput)
+import Domain.Model.Problem.Problem (Problem)
+import Domain.Model.Problem.CreateInput (CreateInput)
 
 class IProblemRepo r where
   getByID :: (MonadIO m, MonadBaseControl IO m) => r -> T.Text -> ReaderT AppState m (Maybe Problem)

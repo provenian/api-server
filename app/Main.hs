@@ -7,13 +7,13 @@ import Servant
 
 import API (api, server)
 import Domain.App
-import qualified Domain.Problem.Service
+import qualified Domain.Service.Problem
 import Driver.MySQL
 import Infra.Repository.ProblemRepo
 
-problemService :: Domain.Problem.Service.ProblemService
+problemService :: Domain.Service.Problem.ProblemService
 problemService =
-  give Infra.Repository.ProblemRepo.new $ Domain.Problem.Service.new
+  give Infra.Repository.ProblemRepo.new $ Domain.Service.Problem.new
 
 main :: IO ()
 main = do

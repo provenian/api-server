@@ -8,8 +8,8 @@ import Database.Generics.Mapper as Mapper
 import qualified Database.MySQL.Simple as SQL
 import Driver.MySQL
 import Domain.App
-import Domain.Problem.IProblemRepo
-import qualified Domain.Problem.Model.CreateInput as CreateInput
+import Domain.Interface.IProblemRepo
+import qualified Domain.Model.Problem.CreateInput as CreateInput
 import Infra.Repository.ProblemRecord
 
 data Repo = Repo

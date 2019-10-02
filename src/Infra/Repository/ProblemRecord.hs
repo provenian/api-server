@@ -7,8 +7,8 @@ import GHC.Generics (Generic)
 import Driver.MySQL
 import Database.Generics.Mapper
 import Domain.App
-import Domain.Problem (Problem(Problem))
-import qualified Domain.Problem as Problem
+import Domain.Model
+import qualified Domain.Model.Problem.Problem as Problem
 
 data ProblemRecord = ProblemRecord {
   id :: VarChar 26 :- '["PRIMARY KEY"],
