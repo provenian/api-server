@@ -2,9 +2,10 @@ module Infra.Repository.ProblemRepo where
 
 import Control.Monad.Reader
 import Data.List (intercalate)
+import qualified Data.Text as T
 import Data.String (IsString(fromString))
 
-import Database.Generics.Mapper as Mapper
+import Database.Generics.Mapper
 import qualified Database.MySQL.Simple as SQL
 import Driver.MySQL
 import Domain.App
@@ -19,7 +20,8 @@ new = SomeProblemRepo Repo
 
 createTable :: ReaderT AppState IO ()
 createTable = void $ runSQL $ \conn ->
-  SQL.execute_ conn $ fromString $ Mapper.createTable ProblemRecord{}
+  SQL.execute_ conn $ fromString $ T.unpack $ Driver.MySQL.createTable
+    ProblemRecord{}
 
 instance IProblemRepo Repo where
   getByID _ key = runSQL $ \conn -> liftIO $ do
@@ -29,6 +31,6 @@ instance IProblemRepo Repo where
     let pairs = mapToSQLValues $ fromModel $ CreateInput.fromCreateInput input "1234"
     let columns = map fst pairs
     let values = map snd pairs
-    _ <- SQL.execute conn (fromString $ "INSERT INTO `ProblemRecord` (" ++ intercalate "," columns ++ ") VALUES (?)") (SQL.Only $ SQL.VaArgs values)
+    _ <- SQL.execute conn (fromString $ T.unpack $ "INSERT INTO `ProblemRecord` (" `T.append` T.intercalate "," columns `T.append` ") VALUES (?)") (SQL.Only $ SQL.VaArgs values)
     return ()
   list _ = fmap (map toModel) $ runSQL $ \conn -> liftIO $ queryWith_ conn "SELECT * FROM `ProblemRecord`" ProblemRecord{}

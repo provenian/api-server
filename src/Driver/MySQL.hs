@@ -11,6 +11,9 @@ module Driver.MySQL (
   GWrapper(..),
   queryWith,
   queryWith_,
+  createTableOf,
+  createTable,
+  createTableWithName,
 ) where
 
 import Control.Monad.Reader
@@ -86,7 +89,6 @@ queryWith conn q p r = do
     ( mapFromSQLValues r
     . M.fromList
     . concatMap (\(x, y) -> maybe [] (return . (,) x) y)
-    . map (\(x, y) -> (T.unpack x, y))
     . getGWrapper
     )
     ws
@@ -103,7 +105,29 @@ queryWith_ conn q r = do
     ( mapFromSQLValues r
     . M.fromList
     . concatMap (\(x, y) -> maybe [] (return . (,) x) y)
-    . map (\(x, y) -> (T.unpack x, y))
     . getGWrapper
     )
     ws
+
+createTableOf :: T.Text -> [(T.Text, T.Text, [T.Text])] -> T.Text
+createTableOf tableName fields = T.concat
+  [ "CREATE TABLE IF NOT EXISTS `"
+  , tableName
+  , "` ("
+  , T.intercalate ", " $ map
+    ( \(fieldName, fieldType, attrs) -> T.intercalate
+      " "
+      ( (if null attrs then id else (++ attrs))
+        ["`" `T.append` fieldName `T.append` "`", fieldType]
+      )
+    )
+    fields
+  , ")"
+  ]
+
+createTable :: (Generic a, GMapper (Rep a)) => a -> T.Text
+createTable a = uncurry createTableOf (grecord (from a))
+
+createTableWithName :: (Generic a, GMapper (Rep a)) => T.Text -> a -> T.Text
+createTableWithName tableName a =
+  uncurry (\_ -> createTableOf tableName) (grecord (from a))

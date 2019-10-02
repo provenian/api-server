@@ -11,7 +11,6 @@ module Database.Generics.Mapper (
   (:-)(..),
   mapToSQLValues,
   mapFromSQLValues,
-  createTable,
   recordTypeOf,
   RMapper,
 
@@ -21,6 +20,7 @@ module Database.Generics.Mapper (
 import Data.Proxy
 import Data.List
 import qualified Data.Map as M
+import qualified Data.Text as T
 import Generics.Deriving
 import GHC.Generics
 import GHC.TypeLits
@@ -30,20 +30,20 @@ data (:-) a (attrs :: [Symbol]) = Field { getField :: a }
   deriving (Eq, Show)
 
 class GMapper f where
-  grecord :: f p -> (String, [(String, String, [String])])
-  gfields :: f p -> [(String, String, [String])]
-  gfield :: f p -> (String, String, [String])
+  grecord :: f p -> (T.Text, [(T.Text, T.Text, [T.Text])])
+  gfields :: f p -> [(T.Text, T.Text, [T.Text])]
+  gfield :: f p -> (T.Text, T.Text, [T.Text])
 
-  gmapsTo :: f p -> [(String, SQLValue)]
-  gmapsFrom :: f p -> M.Map String SQLValue -> f p
+  gmapsTo :: f p -> [(T.Text, SQLValue)]
+  gmapsFrom :: f p -> M.Map T.Text SQLValue -> f p
 
 class GSelector f where
-  gattrs :: f p -> (String, [String])
+  gattrs :: f p -> (T.Text, [T.Text])
   gmapTo :: f p -> SQLValue
   gmapFrom :: SQLValue -> f p
 
 instance (Datatype d, GMapper t) => GMapper (D1 d t) where
-  grecord (x :: D1 d t p) = (datatypeName (undefined :: M1 _i d _f _p), gfields (unM1 x))
+  grecord (x :: D1 d t p) = (T.pack $ datatypeName (undefined :: M1 _i d _f _p), gfields (unM1 x))
 
   gmapsTo x = gmapsTo (unM1 x)
   gmapsFrom r = M1 . gmapsFrom (unM1 r)
@@ -62,57 +62,39 @@ instance (GMapper r1, GMapper r2) => GMapper (r1 :*: r2) where
 
 instance (Selector d, GSelector t) => GMapper (S1 d t) where
   gfields r = [gfield r]
-  gfield s = let (ft,attrs) = gattrs (unM1 s) in (selName s, ft, attrs)
+  gfield s = let (ft,attrs) = gattrs (unM1 s) in (T.pack $ selName s, ft, attrs)
 
-  gmapsTo r = [(selName r, gmapTo (unM1 r))]
-  gmapsFrom r mp = maybe r (M1 . gmapFrom) (mp M.!? selName r)
+  gmapsTo r = [(T.pack $ selName r, gmapTo (unM1 r))]
+  gmapsFrom r mp = maybe r (M1 . gmapFrom) (mp M.!? T.pack (selName r))
 
 instance (Mapper attrs, SQLField t) => GSelector (Rec0 (t :- attrs)) where
-  gattrs (x :: Rec0 (t :- attrs) p) = (fieldType (undefined :: t), attrs (Proxy :: Proxy attrs))
+  gattrs (x :: Rec0 (t :- attrs) p) = (T.pack $ fieldType (undefined :: t), attrs (Proxy :: Proxy attrs))
   gmapTo = encode . getField . unK1
   gmapFrom = K1 . Field . decode
 
 instance {-# OVERLAPS #-} SQLField r => GSelector (Rec0 r) where
-  gattrs (x :: Rec0 r p) = (fieldType (undefined :: r), [])
+  gattrs (x :: Rec0 r p) = (T.pack $ fieldType (undefined :: r), [])
   gmapTo = encode . unK1
   gmapFrom = K1 . decode
 
 class Mapper a where
-  attrs :: Proxy a -> [String]
+  attrs :: Proxy a -> [T.Text]
 
 instance Mapper '[] where
   attrs Proxy = []
 
 instance (Mapper xs, KnownSymbol x) => Mapper (x : xs) where
-  attrs (Proxy :: Proxy (x:xs)) = symbolVal (Proxy :: Proxy x) : attrs (Proxy :: Proxy xs)
-
-createTable :: (Generic a, GMapper (Rep a)) => a -> String
-createTable a =
-  let (tableName, fields) = grecord (from a)
-  in  concat
-        [ "CREATE TABLE IF NOT EXISTS `"
-        , tableName
-        , "` ("
-        , intercalate ", " $ map
-          ( \(fieldName, fieldType, attrs) -> intercalate
-            " "
-            ( (if null attrs then id else (++ attrs))
-              ["`" ++ fieldName ++ "`", fieldType]
-            )
-          )
-          fields
-        , ")"
-        ]
+  attrs (Proxy :: Proxy (x:xs)) = T.pack (symbolVal (Proxy :: Proxy x)) : attrs (Proxy :: Proxy xs)
 
 type RMapper a = (Generic a, GMapper (Rep a))
 
-mapToSQLValues :: RMapper a => a -> [(String, SQLValue)]
+mapToSQLValues :: RMapper a => a -> [(T.Text, SQLValue)]
 mapToSQLValues = gmapsTo . from
 
-mapFromSQLValues :: RMapper a => a -> M.Map String SQLValue -> a
+mapFromSQLValues :: RMapper a => a -> M.Map T.Text SQLValue -> a
 mapFromSQLValues r = to . gmapsFrom (from r)
 
-recordTypeOf :: RMapper a => a -> (String, M.Map String (String, [String]))
+recordTypeOf :: RMapper a => a -> (T.Text, M.Map T.Text (T.Text, [T.Text]))
 recordTypeOf =
   (\(x, y) -> (x, M.fromList $ map (\(a, b, c) -> (a, (b, c))) y))
     . grecord
