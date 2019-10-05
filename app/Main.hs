@@ -9,12 +9,12 @@ import API (api, server)
 import Domain.App
 import qualified Domain.Service.Problem
 import Driver.MySQL
-import qualified Infra.Repository.ProblemRepo
-import Infra.Repository.ProblemRecord (ProblemRecord(ProblemRecord))
+import qualified Infra.Repository.Problem.SummaryRepo
+import Infra.Repository.Problem.SummaryRecord (SummaryRecord(SummaryRecord))
 
 problemService :: Domain.Service.Problem.ProblemService
 problemService =
-  give Infra.Repository.ProblemRepo.new $ Domain.Service.Problem.new
+  give Infra.Repository.Problem.SummaryRepo.new $ Domain.Service.Problem.new
 
 main :: IO ()
 main = do
@@ -30,9 +30,9 @@ main = do
   let appState = AppState {connPool = pool}
 
   flip runReaderT appState $ do
-    Infra.Repository.ProblemRepo.createTable
+    Infra.Repository.Problem.SummaryRepo.createTable
 
-    runSQL $ \conn -> migrate conn ProblemRecord{}
+    runSQL $ \conn -> migrate conn SummaryRecord{}
 
   liftIO
     $ run 1234

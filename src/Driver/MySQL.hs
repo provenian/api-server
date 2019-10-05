@@ -16,12 +16,12 @@ module Driver.MySQL (
   createTableWithName,
   migrateColumn,
   migrate,
+  insertInto,
 ) where
 
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl(..))
 import Data.Pool
-import Data.List
 import Data.String (IsString(fromString))
 import qualified Data.Map as M
 import qualified Data.Binary.Builder as Builder
@@ -158,3 +158,21 @@ migrate conn entity = do
 
   forM_ fields $ \(fieldName, fieldType, attrs) ->
     migrateColumn conn tableName fieldName fieldType attrs
+
+insertInto :: (RMapper a) => SQL.Connection -> T.Text -> a -> IO Int
+insertInto conn tableName val = do
+  let pairs   = mapToSQLValues val
+  let columns = map fst pairs
+  let values  = map snd pairs
+
+  fmap fromIntegral $ SQL.execute
+    conn
+    (          fromString
+    $          T.unpack
+    $          "INSERT INTO `"
+    `T.append` tableName
+    `T.append` "` ("
+    `T.append` T.intercalate "," columns
+    `T.append` ") VALUES (?)"
+    )
+    (SQL.Only $ SQL.VaArgs values)

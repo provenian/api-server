@@ -19,13 +19,21 @@ extra-source-files:  CHANGELOG.md
 
 library
   exposed-modules:
+    Data.Maybe.Only
     Domain.App
-    Domain.Interface.IProblemRepo
     Domain.Model.Problem.CreateInput
     Domain.Model.Problem.Problem
+    Domain.Model.Problem.ProblemSummary
+    Domain.Model.Problem.ProblemDetail
+    Domain.Interface.ProblemSummaryRepo
+    Domain.Interface.IProblemRepo
     Domain.Service.Problem
     Domain.Submission
     Driver.MySQL
+    Infra.Repository.Problem.SummaryLanguageRelation
+    Infra.Repository.Problem.SummaryTagRelation
+    Infra.Repository.Problem.SummaryRecord
+    Infra.Repository.Problem.SummaryRepo
     Infra.Repository.ProblemRecord
     Infra.Repository.ProblemRepo
     Web.Handler.Problems

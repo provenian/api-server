@@ -10,6 +10,14 @@ import Domain.App
 import Domain.Model
 import qualified Domain.Model.Problem.Problem as Problem
 
+data ProblemSummaryRecord = ProblemSummaryRecord {
+  id :: VarChar 36 :- '["PRIMARY KEY"],
+  title :: VarChar 256,
+  createdAt :: BigInt :- '["NOT NULL"],
+  updatedAt :: BigInt :- '["NOT NULL"]
+} deriving (Generic, Eq, Show)
+
+{-
 data ProblemRecord = ProblemRecord {
   id :: VarChar 36 :- '["PRIMARY KEY"],
   title :: VarChar 1024,
@@ -47,3 +55,4 @@ fromModel r = ProblemRecord
   (Text $ T.pack $ show $ Problem.files r)
   (Text $ T.pack $ show $ Problem.languages r)
   (Text $ T.pack $ show $ Problem.tags r)
+-}
