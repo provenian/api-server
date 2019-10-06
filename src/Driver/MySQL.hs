@@ -16,6 +16,7 @@ module Driver.MySQL (
   createTableWithName,
   migrateColumn,
   migrate,
+  migrateWithName,
   insertInto,
 ) where
 
@@ -23,6 +24,7 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl(..))
 import Data.Pool
 import Data.String (IsString(fromString))
+import Data.Maybe.Only (mayOnly)
 import qualified Data.Map as M
 import qualified Data.Binary.Builder as Builder
 import qualified Data.Text as T
@@ -155,6 +157,14 @@ migrateColumn conn tableName columnName field attrs = do
 migrate :: (Generic a, GMapper (Rep a)) => SQL.Connection -> a -> IO ()
 migrate conn entity = do
   let (tableName, fields) = grecord $ from entity
+
+  forM_ fields $ \(fieldName, fieldType, attrs) ->
+    migrateColumn conn tableName fieldName fieldType attrs
+
+migrateWithName
+  :: (Generic a, GMapper (Rep a)) => SQL.Connection -> T.Text -> a -> IO ()
+migrateWithName conn tableName entity = do
+  let (_, fields) = grecord $ from entity
 
   forM_ fields $ \(fieldName, fieldType, attrs) ->
     migrateColumn conn tableName fieldName fieldType attrs

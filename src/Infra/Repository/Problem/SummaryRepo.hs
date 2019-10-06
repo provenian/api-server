@@ -30,17 +30,27 @@ createTable = void $ runSQL $ \conn -> do
     "problem_summary_tag_relation"
     SummaryTagRelation{}
 
+migrateTable :: ReaderT AppState IO ()
+migrateTable = void $ runSQL $ \conn -> do
+  Driver.MySQL.migrateWithName conn "problem_summary" SummaryRecord{}
+  Driver.MySQL.migrateWithName conn
+                               "problem_summary_language_relation"
+                               SummaryLanguageRelation{}
+  Driver.MySQL.migrateWithName conn
+                               "problem_summary_tag_relation"
+                               SummaryTagRelation{}
+
 fromModel
   :: Summary -> (SummaryRecord, [SummaryLanguageRelation], [SummaryTagRelation])
 fromModel m =
-  let rid = Field $ VarChar $ Problem.id m
-  in  ( SummaryRecord rid
+  let rid = VarChar $ Problem.id m
+  in  ( SummaryRecord (Field rid)
                       (VarChar $ Problem.title m)
                       (Field $ BigInt $ fromIntegral $ Problem.createdAt m)
                       (Field $ BigInt $ fromIntegral $ Problem.updatedAt m)
-      , map (\t -> SummaryLanguageRelation rid (VarChar t))
+      , map (\t -> SummaryLanguageRelation (Field rid) (VarChar t))
         $ Problem.languages m
-      , map (\t -> SummaryTagRelation rid (VarChar t)) $ Problem.tags m
+      , map (\t -> SummaryTagRelation (Field rid) (VarChar t)) $ Problem.tags m
       )
 
 -- | Won't check the equality of id

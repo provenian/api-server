@@ -31,8 +31,7 @@ main = do
 
   flip runReaderT appState $ do
     Infra.Repository.Problem.SummaryRepo.createTable
-
-    runSQL $ \conn -> migrate conn SummaryRecord{}
+    Infra.Repository.Problem.SummaryRepo.migrateTable
 
   liftIO
     $ run 1234
