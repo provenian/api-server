@@ -1,4 +1,7 @@
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Driver.MySQL (
   runSQL,
   createSQLPool,
@@ -18,6 +21,7 @@ module Driver.MySQL (
   migrate,
   migrateWithName,
   insertInto,
+  TableMapper(..),
 ) where
 
 import Control.Monad.Reader
@@ -37,7 +41,9 @@ import qualified Database.MySQL.Simple.QueryResults as SQL
 import qualified Database.MySQL.Simple.Param as SQL
 import qualified Database.MySQL.Base.Types as MySQL
 import Database.Generics.Mapper
+import Data.Proxy (Proxy(..))
 import GHC.Generics
+import GHC.TypeLits (Symbol, KnownSymbol, symbolVal)
 
 newtype ConnPool = ConnPool { getPool :: Pool SQL.Connection }
 
@@ -69,6 +75,15 @@ instance SQL.QueryResults GWrapper where
     go MySQL.LongLong bs = SQLBigInt $ (\(Right (x,"")) -> x) $ T.decimal $ TE.decodeUtf8 bs
     go MySQL.Long bs = SQLInt $ (\(Right (x,"")) -> x) $ T.decimal $ TE.decodeUtf8 bs
     go x y = error ("unsupported type: " ++ show x ++ "; " ++ show y)
+
+class TableMapper r where
+  gtableName :: r -> T.Text
+  default gtableName :: (Generic r, GMapper (Rep r)) => r -> T.Text
+  gtableName = fst . grecord . from
+
+  gfields' :: r -> [(T.Text, T.Text, [T.Text])]
+  default gfields' :: (Generic r, GMapper (Rep r)) => r -> [(T.Text, T.Text, [T.Text])]
+  gfields' = snd . grecord . from
 
 queryWith
   :: (SQL.QueryParams q, RMapper r)
@@ -119,12 +134,11 @@ createTableOf tableName fields = T.concat
   , ")"
   ]
 
-createTable :: (Generic a, GMapper (Rep a)) => a -> T.Text
-createTable a = uncurry createTableOf (grecord (from a))
+createTable :: (TableMapper a) => a -> T.Text
+createTable a = createTableOf (gtableName a) (gfields' a)
 
-createTableWithName :: (Generic a, GMapper (Rep a)) => T.Text -> a -> T.Text
-createTableWithName tableName a =
-  uncurry (\_ -> createTableOf tableName) (grecord (from a))
+createTableWithName :: (TableMapper a) => T.Text -> a -> T.Text
+createTableWithName tableName a = createTableOf tableName (gfields' a)
 
 migrateColumn
   :: SQL.Connection

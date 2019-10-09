@@ -111,6 +111,7 @@ test-suite unit-tests
     tasty-discover:tasty-discover >= 4.2 && < 4.3,
   build-depends:
     base,
+    database-generic-mapper,
     tasty,
     tasty-hspec,
     provenian-api-server,

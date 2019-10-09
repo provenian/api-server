@@ -1,6 +1,7 @@
 module Infra.Repository.Problem.SummaryRecord where
 
 import GHC.Generics (Generic)
+import Driver.MySQL
 import Database.Generics.Mapper
 
 data SummaryRecord = SummaryRecord {
@@ -9,3 +10,5 @@ data SummaryRecord = SummaryRecord {
   createdAt :: BigInt :- '["NOT NULL"],
   updatedAt :: BigInt :- '["NOT NULL"]
 } deriving (Generic, Eq, Show)
+
+instance TableMapper SummaryRecord

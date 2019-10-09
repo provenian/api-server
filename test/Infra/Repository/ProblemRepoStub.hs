@@ -2,8 +2,8 @@ module Infra.Repository.ProblemRepoStub where
 
 import Prelude hiding (id)
 import qualified Data.Map as M
-import Domain.Problem
-import Domain.Problem.IProblemRepo
+import Domain.Model.Problem.Problem
+import Domain.Interface.IProblemRepo
 
 data ProblemStub = ProblemStub
 
