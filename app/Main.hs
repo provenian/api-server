@@ -23,6 +23,7 @@ main = do
                          , connectUser     = "root"
                          , connectPassword = "password"
                          , connectHost     = "127.0.0.1"
+                         , connectPort     = 5506
                          , connectOptions  = [CharsetName "utf8mb4"]
                          }
     )

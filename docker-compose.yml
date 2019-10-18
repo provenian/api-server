@@ -9,4 +9,4 @@ services:
       MYSQL_DATABASE: provenian
       TZ: "Asia/Tokyo"
     ports:
-      - 3306:3306
+      - 5506:3306
